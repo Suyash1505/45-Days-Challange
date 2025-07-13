@@ -4,25 +4,42 @@ import "react-circular-progressbar/dist/styles.css";
 import bg from "./assets/bg1.jpg";
 import TodoList from "./components/TodoList";
 
+// Helper: Get current date/time in IST timezone
+function getISTDate() {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000; // UTC in ms
+  const istOffset = 5.5 * 60 * 60000; // IST = UTC + 5:30
+  return new Date(utc + istOffset);
+}
+
+// Calculate challenge day based on IST midnight
+function getChallengeDay(startDateStr = "2025-07-14") {
+  const nowIST = getISTDate();
+
+  const todayMidnightIST = new Date(
+    nowIST.getFullYear(),
+    nowIST.getMonth(),
+    nowIST.getDate()
+  );
+
+  const startDate = new Date(startDateStr);
+  const startMidnight = new Date(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+    startDate.getDate()
+  );
+
+  const diffTime = todayMidnightIST - startMidnight;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  return diffDays >= 0 ? diffDays + 1 : 0;
+}
+
 export default function App() {
-
-  function getChallengeDay(startDateStr = "2025-07-14") {
-    const now = new Date();
-    if (now.getHours() < 2) {
-        now.setDate(now.getDate() - 1); // Use previous day before 2:00 AM
-    }
-    const startDate = new Date(startDateStr);
-    const diffTime = now - startDate;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    return diffDays;
-  }
-
+  // Initialize selected date to current IST date in yyyy-mm-dd
   const [selectedDate, setSelectedDate] = useState(() => {
-    const now = new Date();
-    if (now.getHours() < 2) {
-      now.setDate(now.getDate() - 1);
-    }
-    return now.toISOString().split('T')[0];
+    const nowIST = getISTDate();
+    return nowIST.toISOString().split("T")[0];
   });
 
   const [quote, setQuote] = useState("Discipline creates freedom.");
@@ -41,6 +58,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Retrieve and save tasks for selected date from localStorage
   const getTasks = (key) => JSON.parse(localStorage.getItem(`${key}-${selectedDate}`)) || [];
   const setTasks = (key, tasks) => localStorage.setItem(`${key}-${selectedDate}`, JSON.stringify(tasks));
 
@@ -55,7 +73,7 @@ export default function App() {
   const dsaPercentage = Math.min((dsaCompleted / dsaTotal) * 100, 100);
 
   const webCompleted = webTasks.filter(task => task.completed).length;
-  const webTotal = 67; // 33.5*2 (0.5 hr units)
+  const webTotal = 67; // 33.5 hours * 2 for 0.5 increments
   const webPercentage = Math.min((webCompleted / webTotal) * 100, 100);
 
   return (
@@ -78,7 +96,6 @@ export default function App() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
-        
         <div className="bg-sky-900/50 backdrop-blur-md p-4 rounded-xl flex flex-col items-center">
           <h2 className="text-2xl font-semibold text-sky-300 mb-2">DSA Progress</h2>
           <div className="w-28 h-28 mb-4">
@@ -92,7 +109,6 @@ export default function App() {
               })}
             />
           </div>
-          
           <TodoList
             title="DSA Daily Tasks"
             tasks={dsaTasks}
@@ -103,7 +119,6 @@ export default function App() {
 
         <div className="bg-sky-900/50 backdrop-blur-md p-4 rounded-xl flex flex-col items-center">
           <h2 className="text-2xl font-semibold text-sky-300 mb-2">Web Dev Progress</h2>
-          
           <div className="w-28 h-28 mb-4">
             <CircularProgressbar
               value={webPercentage}
@@ -115,14 +130,12 @@ export default function App() {
               })}
             />
           </div>
-          
           <TodoList
             title="Web Dev Daily Tasks"
             tasks={webTasks}
             setTasks={setWebTasks}
             incrementValue={0.5}
           />
-        
         </div>
       </div>
     </div>
