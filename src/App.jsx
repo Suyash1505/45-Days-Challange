@@ -1,45 +1,34 @@
+// 45 Days Challenge App with Correct IST Date Display and Day Counter
+// Ready for direct Vercel deployment
+
 import React, { useState, useEffect } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import bg from "./assets/bg1.jpg";
 import TodoList from "./components/TodoList";
 
-// Helper: Get current date/time in IST timezone
 function getISTDate() {
   const now = new Date();
-  const utc = now.getTime() + now.getTimezoneOffset() * 60000; // UTC in ms
-  const istOffset = 5.5 * 60 * 60000; // IST = UTC + 5:30
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const istOffset = 5.5 * 60 * 60000;
   return new Date(utc + istOffset);
 }
 
-// Calculate challenge day based on IST midnight
 function getChallengeDay(startDateStr = "2025-07-14") {
-  const nowIST = getISTDate();
-
-  const todayMidnightIST = new Date(
-    nowIST.getFullYear(),
-    nowIST.getMonth(),
-    nowIST.getDate()
-  );
-
-  const startDate = new Date(startDateStr);
-  const startMidnight = new Date(
-    startDate.getFullYear(),
-    startDate.getMonth(),
-    startDate.getDate()
-  );
-
-  const diffTime = todayMidnightIST - startMidnight;
+  const now = getISTDate();
+  const startDate = new Date(startDateStr + "T00:00:00+05:30");
+  const diffTime = now - startDate;
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  return diffDays >= 0 ? diffDays + 1 : 0;
+  return diffDays >= 0 ? diffDays + 1 : 0; // show Day 1 on start date
 }
 
 export default function App() {
-  // Initialize selected date to current IST date in yyyy-mm-dd
   const [selectedDate, setSelectedDate] = useState(() => {
-    const nowIST = getISTDate();
-    return nowIST.toISOString().split("T")[0];
+    const now = getISTDate();
+    const dateStr = now.getFullYear() + "-" +
+                    String(now.getMonth() + 1).padStart(2, '0') + "-" +
+                    String(now.getDate()).padStart(2, '0');
+    return dateStr;
   });
 
   const [quote, setQuote] = useState("Discipline creates freedom.");
@@ -58,22 +47,15 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Retrieve and save tasks for selected date from localStorage
-  const getTasks = (key) => JSON.parse(localStorage.getItem(`${key}-${selectedDate}`)) || [];
-  const setTasks = (key, tasks) => localStorage.setItem(`${key}-${selectedDate}`, JSON.stringify(tasks));
-
-  const [dsaTasks, setDsaTasks] = useState(() => getTasks('dsaTasks'));
-  const [webTasks, setWebTasks] = useState(() => getTasks('webTasks'));
-
-  useEffect(() => setTasks('dsaTasks', dsaTasks), [dsaTasks, selectedDate]);
-  useEffect(() => setTasks('webTasks', webTasks), [webTasks, selectedDate]);
+  const [dsaTasks, setDsaTasks] = useState([]);
+  const [webTasks, setWebTasks] = useState([]);
 
   const dsaCompleted = dsaTasks.filter(task => task.completed).length;
   const dsaTotal = 270;
   const dsaPercentage = Math.min((dsaCompleted / dsaTotal) * 100, 100);
 
   const webCompleted = webTasks.filter(task => task.completed).length;
-  const webTotal = 67; // 33.5 hours * 2 for 0.5 increments
+  const webTotal = 67; // 33.5*2 (0.5 hr units)
   const webPercentage = Math.min((webCompleted / webTotal) * 100, 100);
 
   return (
@@ -82,20 +64,11 @@ export default function App() {
       style={{ backgroundImage: `url(${bg})` }}
     >
       <h1 className="text-4xl font-bold text-sky-400 mb-2">45 Days Challenge</h1>
-      <p className="italic text-sky-200 mb-4 text-center">{quote}</p>
+      <p className="italic text-sky-200 mb-2 text-center">{quote}</p>
+      <p className="mt-2 text-lg text-sky-300">Day {getChallengeDay()} / 45</p>
+      <p className="mt-1 text-md text-sky-200">Date: {selectedDate}</p>
 
-      <p className="mt-2 text-lg text-sky-300">
-        Day {getChallengeDay()} / 45
-      </p>
-
-      <input
-        type="date"
-        value={selectedDate}
-        onChange={(e) => setSelectedDate(e.target.value)}
-        className="mb-4 bg-sky-800 text-sky-100 p-2 rounded"
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl mt-6">
         <div className="bg-sky-900/50 backdrop-blur-md p-4 rounded-xl flex flex-col items-center">
           <h2 className="text-2xl font-semibold text-sky-300 mb-2">DSA Progress</h2>
           <div className="w-28 h-28 mb-4">
