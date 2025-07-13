@@ -1,51 +1,125 @@
-import React from "react"
-import { useEffect, useState } from "react"
-import MotivationBanner from "./components/MotivationBanner"
-import DayCounter from "./components/DayCounter"
-import ProgressBar from "./components/ProgressBar"
-import TodoList from "./components/TodoList"
+import React, { useState, useEffect } from "react";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
+import bg from "./assets/bg1.jpg";
+import TodoList from "./components/TodoList";
 
-function App() {
-  
-  const [completedQuestions, setCompletedQuestions] = useState( () => {
-    const number = Number(localStorage.getItem('completedQuestions')) || 0;
-    return number;
-  })
+export default function App() {
 
-  const [completedHours, setCompletedHours] = useState( () => {
-    const hours = Number(localStorage.getItem('completedHours')) || 0;
-    return hours;
-  })
+  function getChallengeDay(startDateStr = "2025-07-14") {
+    const now = new Date();
+    if (now.getHours() < 2) {
+        now.setDate(now.getDate() - 1); // Use previous day before 2:00 AM
+    }
+    const startDate = new Date(startDateStr);
+    const diffTime = now - startDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays;
+  }
 
-  useEffect( () => {
-    localStorage.setItem('completedQuestions', completedQuestions);
-    localStorage.setItem('completedHours', completedHours);
-  }, [completedQuestions, completedHours])
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    if (now.getHours() < 2) {
+      now.setDate(now.getDate() - 1);
+    }
+    return now.toISOString().split('T')[0];
+  });
+
+  const [quote, setQuote] = useState("Discipline creates freedom.");
+  const quotes = [
+    "Focus. Execute. Repeat.",
+    "Consistency beats motivation.",
+    "One day, or day one. You decide.",
+    "You are building your future today.",
+    "Discipline creates freedom."
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getTasks = (key) => JSON.parse(localStorage.getItem(`${key}-${selectedDate}`)) || [];
+  const setTasks = (key, tasks) => localStorage.setItem(`${key}-${selectedDate}`, JSON.stringify(tasks));
+
+  const [dsaTasks, setDsaTasks] = useState(() => getTasks('dsaTasks'));
+  const [webTasks, setWebTasks] = useState(() => getTasks('webTasks'));
+
+  useEffect(() => setTasks('dsaTasks', dsaTasks), [dsaTasks, selectedDate]);
+  useEffect(() => setTasks('webTasks', webTasks), [webTasks, selectedDate]);
+
+  const dsaCompleted = dsaTasks.filter(task => task.completed).length;
+  const dsaTotal = 270;
+  const dsaPercentage = Math.min((dsaCompleted / dsaTotal) * 100, 100);
+
+  const webCompleted = webTasks.filter(task => task.completed).length;
+  const webTotal = 67; // 33.5*2 (0.5 hr units)
+  const webPercentage = Math.min((webCompleted / webTotal) * 100, 100);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white flex flex-col items-center p-4">
-      <MotivationBanner />
-      <DayCounter startDate="2025-07-14" />
-      
-      <div className="w-full max-w-md mt-6 space-y-4">
-        <ProgressBar 
-          label="DSA Questions" 
-          current={completedQuestions} 
-          total={270} 
-          onIncrement={() => setCompletedQuestions(prev => prev + 1)}
-        />
-        
-        <ProgressBar 
-          label="Backend Hours" 
-          current={completedHours} 
-          total={33.5} 
-          onIncrement={() => setCompletedHours(prev => +(prev + 0.5).toFixed(1))}
-        />
+    <div
+      className="min-h-screen bg-cover bg-center p-4 flex flex-col items-center"
+      style={{ backgroundImage: `url(${bg})` }}
+    >
+      <h1 className="text-4xl font-bold text-sky-400 mb-2">45 Days Challenge</h1>
+      <p className="italic text-sky-200 mb-4 text-center">{quote}</p>
 
-        <TodoList />
+      <p className="mt-2 text-lg text-sky-300">
+        Day {getChallengeDay()} / 45
+      </p>
+
+      <input
+        type="date"
+        value={selectedDate}
+        onChange={(e) => setSelectedDate(e.target.value)}
+        className="mb-4 bg-sky-800 text-sky-100 p-2 rounded"
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
+        <div className="bg-sky-900/50 backdrop-blur-md p-4 rounded-xl flex flex-col items-center">
+          <h2 className="text-2xl font-semibold text-sky-300 mb-2">DSA Progress</h2>
+          <div className="w-28 h-28 mb-4">
+            <CircularProgressbar
+              value={dsaPercentage}
+              text={`${Math.round(dsaPercentage)}%`}
+              styles={buildStyles({
+                pathColor: "#38bdf8",
+                textColor: "#bae6fd",
+                trailColor: "#1e3a8a",
+              })}
+            />
+          </div>
+          <TodoList
+            title="DSA Daily Tasks"
+            tasks={dsaTasks}
+            setTasks={setDsaTasks}
+            incrementValue={1}
+          />
+        </div>
+
+        <div className="bg-sky-900/50 backdrop-blur-md p-4 rounded-xl flex flex-col items-center">
+          <h2 className="text-2xl font-semibold text-sky-300 mb-2">Web Dev Progress</h2>
+          <div className="w-28 h-28 mb-4">
+            <CircularProgressbar
+              value={webPercentage}
+              text={`${Math.round(webPercentage)}%`}
+              styles={buildStyles({
+                pathColor: "#38bdf8",
+                textColor: "#bae6fd",
+                trailColor: "#1e3a8a",
+              })}
+            />
+          </div>
+          <TodoList
+            title="Web Dev Daily Tasks"
+            tasks={webTasks}
+            setTasks={setWebTasks}
+            incrementValue={0.5}
+          />
+        </div>
       </div>
     </div>
-  )
+  );
 }
-
-export default App
