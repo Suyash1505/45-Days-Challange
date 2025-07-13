@@ -78,6 +78,7 @@ export default function App() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
+        
         <div className="bg-sky-900/50 backdrop-blur-md p-4 rounded-xl flex flex-col items-center">
           <h2 className="text-2xl font-semibold text-sky-300 mb-2">DSA Progress</h2>
           <div className="w-28 h-28 mb-4">
@@ -91,6 +92,7 @@ export default function App() {
               })}
             />
           </div>
+          
           <TodoList
             title="DSA Daily Tasks"
             tasks={dsaTasks}
@@ -101,6 +103,7 @@ export default function App() {
 
         <div className="bg-sky-900/50 backdrop-blur-md p-4 rounded-xl flex flex-col items-center">
           <h2 className="text-2xl font-semibold text-sky-300 mb-2">Web Dev Progress</h2>
+          
           <div className="w-28 h-28 mb-4">
             <CircularProgressbar
               value={webPercentage}
@@ -112,12 +115,14 @@ export default function App() {
               })}
             />
           </div>
+          
           <TodoList
             title="Web Dev Daily Tasks"
             tasks={webTasks}
             setTasks={setWebTasks}
             incrementValue={0.5}
           />
+        
         </div>
       </div>
     </div>
