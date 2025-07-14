@@ -1,4 +1,4 @@
-// 45 Days Challenge App with Correct IST Date Display and Day Counter
+// 45 Days Challenge App with LocalStorage Persistence
 // Ready for direct Vercel deployment
 
 import React, { useState, useEffect } from "react";
@@ -47,8 +47,26 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const [dsaTasks, setDsaTasks] = useState([]);
-  const [webTasks, setWebTasks] = useState([]);
+  // ✅ Load dsaTasks and webTasks from LocalStorage on mount
+  const [dsaTasks, setDsaTasks] = useState(() => {
+    const stored = localStorage.getItem("dsaTasks");
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  const [webTasks, setWebTasks] = useState(() => {
+    const stored = localStorage.getItem("webTasks");
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  // ✅ Save dsaTasks to LocalStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("dsaTasks", JSON.stringify(dsaTasks));
+  }, [dsaTasks]);
+
+  // ✅ Save webTasks to LocalStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("webTasks", JSON.stringify(webTasks));
+  }, [webTasks]);
 
   const dsaCompleted = dsaTasks.filter(task => task.completed).length;
   const dsaTotal = 270;
